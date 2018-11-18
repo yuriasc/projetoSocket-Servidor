@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package servidor;
 
 import java.io.BufferedReader;
@@ -37,14 +32,15 @@ public class GerenciadorCliente extends Thread {
             leitor = new BufferedReader(new InputStreamReader(cliente.getInputStream()));// esta recebendo do cliente																							 																							 
             escritor = new PrintWriter(cliente.getOutputStream(), true);// esta mandando pro cliente, true e o autoflush																		 																		 																		 																																			 
             escritor.println("Bem vindo ao chat. Por favor digite seu nome");
-            
+
             String msg = leitor.readLine();
             this.nomecliente = msg;
-            
+
             escritor.println("Ola " + this.nomecliente + "(Digite bye para sair do chat)");
             clientes.put(this.nomecliente, this);
-            
+
             while (true) {
+                
                 msg = leitor.readLine();
                 Date date = new Date();
                 SimpleDateFormat formatador = new SimpleDateFormat("dd/MM/yyyy");
