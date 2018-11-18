@@ -30,17 +30,48 @@ public class GerenciadorCliente extends Thread {
     public void run() {
         try {
             leitor = new BufferedReader(new InputStreamReader(cliente.getInputStream()));// esta recebendo do cliente																							 																							 
-            escritor = new PrintWriter(cliente.getOutputStream(), true);// esta mandando pro cliente, true e o autoflush																		 																		 																		 																																			 
-            escritor.println("Bem vindo ao chat. Por favor digite seu nome");
+            escritor = new PrintWriter(cliente.getOutputStream(), true);// esta mandando pro cliente, true e o autoflush	
 
-            String msg = leitor.readLine();
+            int flag = 0;
+            String msg = "";
+
+            while (flag == 0) {
+                escritor.println("Bem vindo ao chat. Por favor digite um nome: ");
+                msg = leitor.readLine();
+
+                StringBuilder name = new StringBuilder();
+                //escritor.println("Lista de Clientes: " + clientes.isEmpty());                
+
+                if (!clientes.isEmpty()) {
+                    for (String c : clientes.keySet()) {
+                        //name.append(c);
+                        //escritor.println("Vem da Lista: " + c);
+                        if (c.trim().equals(msg)) {
+                            escritor.println("Nome escolhido: " + msg + ", já existe no Chat, escolha outro por favor!");
+                            //escritor.println("flag 0");
+                            flag = 0;
+                            break;
+                        } else {
+//                            escritor.println("Nome -> " + name.toString());
+//                            escritor.println("Nome Dig -> " + msg);
+//                            escritor.println("flag 1");
+                            flag = 1;
+                        }
+                    }
+                } else {
+                    flag = 1;
+                }                
+
+            }
+
+            //escritor.println("Nome dos usuarios: " + name.toString());
             this.nomecliente = msg;
 
             escritor.println("Ola " + this.nomecliente + "(Digite bye para sair do chat)");
             clientes.put(this.nomecliente, this);
 
             while (true) {
-                
+
                 msg = leitor.readLine();
                 Date date = new Date();
                 SimpleDateFormat formatador = new SimpleDateFormat("dd/MM/yyyy");
@@ -53,11 +84,9 @@ public class GerenciadorCliente extends Thread {
                 if (msg.equalsIgnoreCase("bye")) {
                     this.cliente.close();
 
-                    // ENVIAR MENSAGEM PRIVADA
                     //ENVIAR MENSAGEM PRIVADA
                 } else if (msg.toLowerCase().startsWith("send -user")) {
-//					String nome = msg.substring(9, msg.indexOf(" "));
-//					System.out.println(nome);
+
                     String[] msgArray = msg.split(" ");
                     String nome = msgArray[2];
                     String mensagem = "";
@@ -66,7 +95,7 @@ public class GerenciadorCliente extends Thread {
                             mensagem = mensagem + " " + msgArray[i];
                         }
                     }
-//					String mensagem = msg.substring(msg.indexOf(" "), msg.length());
+
                     GerenciadorCliente destinatario = clientes.get(nome);
 
                     if (destinatario == null || mensagem.isEmpty()) {
@@ -74,7 +103,7 @@ public class GerenciadorCliente extends Thread {
                     } else {
                         destinatario.getEscritor()
                                 .println(cliente.getInetAddress().getHostAddress() + ":"
-                                        + cliente.getPort() + "/~" + this.nomecliente + ":" + mensagem + " " + horas
+                                        + cliente.getPort() + "/~" + this.nomecliente + ": " + mensagem + " " + horas
                                         + "h" + minutos + " " + formatador.format(date));
                     }
 
@@ -83,7 +112,7 @@ public class GerenciadorCliente extends Thread {
                     StringBuilder str = new StringBuilder();
                     for (String c : clientes.keySet()) {
                         str.append(c);
-                        str.append(",");
+                        str.append(" | ");
                     }
                     str.delete(str.length() - 1, str.length());
                     escritor.println("Nome dos usuarios: " + str.toString());
@@ -96,23 +125,26 @@ public class GerenciadorCliente extends Thread {
 
                         GerenciadorCliente destinatario = clientes.get(c);
                         destinatario.getEscritor()
-                                .println(cliente.getInetAddress().getHostAddress() + ":" + cliente.getPort() + "/~"
+                                .println(cliente.getInetAddress().getHostAddress() + ": " + cliente.getPort() + "/~"
                                         + this.nomecliente + ":" + mensagem + " " + horas + "h" + minutos + " "
                                         + formatador.format(date));
                     }
-                } // RENOMEAR NOME DO USUARIO
-                else if (msg.toLowerCase().startsWith("rename")) {
+
+                    // RENOMEAR NOME DO USUARIO
+                } else if (msg.toLowerCase().startsWith("rename")) {
+
                     String novonome = msg.substring(msg.indexOf(" "), msg.length());
                     novonome = novonome.trim();
                     System.out.println(novonome);
                     StringBuilder str = new StringBuilder();
                     GerenciadorCliente destinatario = clientes.get(novonome);
+
                     for (String c : clientes.keySet()) {
                         str.append(c);
                         GerenciadorCliente nomelista = clientes.get(c);
                         if (nomelista != destinatario) {
                             clientes.remove(this.nomecliente);
-                            System.out.println("Nome depois de remover" + novonome);
+                            System.out.println("Nome depois de remover: " + novonome);
                             clientes.put(novonome, this);
                             System.out.println(novonome);
                             this.nomecliente = novonome;
@@ -122,17 +154,16 @@ public class GerenciadorCliente extends Thread {
                             escritor.println("Nome " + novonome + " ja existe");
                             break;
                         }
-
                     }
-
                 } else {
-
-                    escritor.println("Comando Inexistente");// COMANDO INVALIDO
+                    // COMANDO INVALIDO
+                    escritor.println("Comando Inexistente");
                 }
             }
         } catch (IOException e) {
             System.err.println("O cliente " + this.nomecliente + " saiu do chat");
-            clientes.remove(this.nomecliente);// REMOVE O CLIENTE DA LISTA
+            // REMOVE O CLIENTE DA LISTA
+            clientes.remove(this.nomecliente);
             e.printStackTrace();
         }
     }
